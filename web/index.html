@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ClutchClips Studio</title>
+<style>
+  :root {
+    --bg: #0d0b14; --panel: #17141f; --panel2: #1f1a2b; --line: #2d2640; --text: #f2eefa; --muted: #9a90b3;
+    --yellow: #ffe600; --pink: #f0149a; --purple: #6a2bff; --green: #2fd67b; --red: #ff4d5e; --blue: #4da3ff;
+    --grad: linear-gradient(110deg, var(--purple), var(--pink) 60%, #ff7a1e);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 "Segoe UI", system-ui, sans-serif; }
+  header { padding: 18px 24px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--line); }
+  .logo { width: 38px; height: 38px; border-radius: 50%; background: var(--grad); display: grid; place-items: center;
+          font-weight: 900; color: var(--yellow); text-shadow: 2px 2px 0 #000; font-style: italic; }
+  header h1 { font-size: 20px; margin: 0; letter-spacing: .3px; }
+  header h1 span { color: var(--yellow); }
+  main { display: grid; grid-template-columns: minmax(320px, 420px) 1fr; gap: 20px; padding: 20px 24px; max-width: 1400px; margin: auto; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; padding: 16px; } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+  .card + .card { margin-top: 20px; }
+  h2 { font-size: 15px; margin: 0 0 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  label { display: block; font-weight: 600; margin: 14px 0 6px; }
+  textarea { width: 100%; min-height: 220px; resize: vertical; background: var(--panel2); color: var(--text);
+             border: 1px solid var(--line); border-radius: 10px; padding: 12px; font: 13px/1.5 Consolas, monospace; }
+  textarea:focus, input:focus { outline: 2px solid var(--purple); }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  input[type=number] { width: 80px; background: var(--panel2); color: var(--text); border: 1px solid var(--line);
+                       border-radius: 8px; padding: 8px; font-size: 16px; font-weight: 700; }
+  .chip { background: var(--panel2); border: 1px solid var(--line); color: var(--text); border-radius: 999px;
+          padding: 6px 12px; cursor: pointer; font-weight: 600; }
+  .chip:hover { border-color: var(--pink); }
+  .seg { display: grid; gap: 6px; }
+  .seg label { margin: 0; font-weight: 500; display: flex; gap: 10px; align-items: flex-start; padding: 10px;
+               background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; cursor: pointer; }
+  .seg input { margin-top: 4px; accent-color: var(--pink); }
+  .seg small { color: var(--muted); display: block; }
+  button.go { margin-top: 16px; width: 100%; padding: 14px; border: 0; border-radius: 12px; cursor: pointer;
+              background: var(--grad); color: #fff; font-size: 16px; font-weight: 800; letter-spacing: .5px; }
+  button.go:disabled { opacity: .5; cursor: not-allowed; }
+  .warn { background: #3a1620; border: 1px solid #6b2333; color: #ffc2ca; padding: 10px 12px; border-radius: 10px; margin-bottom: 12px; font-size: 14px; }
+  .empty { color: var(--muted); text-align: center; padding: 60px 20px; }
+  .jobhead { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+  .jobhead h3 { margin: 0; font-size: 20px; }
+  .pill { font-size: 12px; font-weight: 800; padding: 4px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: .6px; }
+  .pill.running, .pill.queued { background: #2a2350; color: #b9a8ff; }
+  .pill.done { background: #133a26; color: var(--green); }
+  .pill.error { background: #3a1620; color: var(--red); }
+  .pill.waiting { background: #3a3110; color: var(--yellow); }
+  .now { margin: 16px 0 8px; font-size: 18px; font-weight: 600; min-height: 27px; }
+  .bar { height: 12px; background: var(--panel2); border-radius: 999px; overflow: hidden; border: 1px solid var(--line); }
+  .bar > div { height: 100%; background: var(--grad); width: 0; transition: width .6s ease; }
+  .timing { display: flex; justify-content: space-between; color: var(--muted); font-size: 14px; margin-top: 8px; }
+  .timing b { color: var(--text); font-size: 16px; }
+  .stages { margin-top: 18px; display: grid; gap: 8px; }
+  .stage { display: grid; grid-template-columns: 28px 1fr auto; gap: 10px; align-items: center; padding: 10px 12px;
+           background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; }
+  .stage.running { border-color: var(--purple); }
+  .stage .ico { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 900; }
+  .stage.pending .ico { border: 2px solid var(--line); }
+  .stage.done .ico, .stage.skipped .ico { background: var(--green); color: #062; }
+  .stage.error .ico { background: var(--red); color: #fff; }
+  .stage.waiting .ico { background: var(--yellow); color: #000; }
+  .stage.waiting { border-color: #6b5a14; }
+  .stage.running .ico { border: 3px solid var(--line); border-top-color: var(--pink); animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .stage .lbl { font-weight: 600; }
+  .stage .msg { color: var(--muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .stage .mini { height: 4px; background: var(--bg); border-radius: 4px; margin-top: 5px; overflow: hidden; }
+  .stage .mini > div { height: 100%; background: var(--pink); }
+  .stage .eta { color: var(--muted); font-size: 13px; white-space: nowrap; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+  @media (max-width: 1100px) { .grid2 { grid-template-columns: 1fr; } }
+  .links { display: grid; gap: 8px; }
+  .link { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; padding: 10px 12px;
+          background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; }
+  .link a { color: var(--blue); font-size: 13px; word-break: break-all; }
+  .link .t { font-weight: 600; }
+  .link small { color: var(--muted); display: block; }
+  .btn { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 8px;
+         padding: 7px 12px; cursor: pointer; font-weight: 600; }
+  .btn:hover { border-color: var(--pink); }
+  .btn.primary { background: var(--grad); border: 0; color: #fff; }
+  .log { max-height: 320px; overflow: auto; font: 12.5px/1.6 Consolas, monospace; color: var(--muted); }
+  .log div b { color: var(--text); font-weight: 500; }
+  .errbox { margin-top: 16px; background: #3a1620; border: 1px solid #6b2333; border-radius: 10px; padding: 12px;
+            color: #ffd0d6; white-space: pre-wrap; font-size: 14px; }
+  .note { margin-top: 16px; background: #3a3110; border: 1px solid #6b5a14; border-radius: 10px; padding: 12px; color: #ffeaa0; font-size: 14px; }
+  .history { display: grid; gap: 6px; }
+  .hist { padding: 10px 12px; border-radius: 10px; background: var(--panel2); border: 1px solid var(--line); cursor: pointer; }
+  .hist:hover, .hist.sel { border-color: var(--pink); }
+  .hist .t { font-weight: 600; display: flex; justify-content: space-between; gap: 8px; }
+  .hist small { color: var(--muted); }
+  .summary { margin-top: 14px; font-size: 14px; color: var(--muted); }
+  .summary b { color: var(--text); }
+  .more { margin-top: 16px; padding: 14px; border-radius: 12px; border: 1px dashed var(--pink); background: #1d1426; }
+  .more h4 { margin: 0 0 4px; font-size: 16px; }
+  .more p { margin: 0 0 10px; color: var(--muted); font-size: 13px; }
+  .more select { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
+  .tag { display: inline-block; background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; padding: 1px 7px; margin: 2px; color: var(--yellow); font-size: 13px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">CC</div>
+  <h1>Clutch<span>Clips</span> Studio</h1>
+</header>
+
+<main>
+  <section>
+    <div class="card">
+      <h2>New campaign</h2>
+      <div id="health"></div>
+      <label for="desc">Campaign description</label>
+      <textarea id="desc" placeholder="Paste the whole campaign description here — rules, VOD links and eligible timestamps."></textarea>
+
+      <label for="vods">VOD links + eligible timestamps</label>
+      <textarea id="vods" style="min-height:90px" placeholder="One per line, e.g.&#10;https://www.twitch.tv/videos/123456789  01:20:00 - 03:45:00&#10;https://www.youtube.com/watch?v=abc  00:10:00 - 01:00:00"></textarea>
+
+      <label for="n">How many clips?</label>
+      <div class="row">
+        <input id="n" type="number" min="1" max="40" value="10">
+        <button class="chip" data-n="3">3</button><button class="chip" data-n="5">5</button>
+        <button class="chip" data-n="10">10</button><button class="chip" data-n="20">20</button>
+        <button class="chip" data-n="30">30</button>
+      </div>
+
+      <label>After making the clips</label>
+      <div class="seg">
+        <label><input type="radio" name="mode" value="public" checked>
+          <span>Upload right away<small>Goes public on upload. Submit links to the campaign within 30 min.</small></span></label>
+        <label><input type="radio" name="mode" value="schedule">
+          <span>Upload &amp; schedule<small>Posts at US prime time (5, 7, 9 PM EST).</small></span></label>
+        <label><input type="radio" name="mode" value="private">
+          <span>Upload as private<small>Review in YouTube Studio first, publish yourself.</small></span></label>
+        <label><input type="radio" name="mode" value="none">
+          <span>Don't upload<small>Just make the Shorts and keep them on this PC.</small></span></label>
+      </div>
+      <button class="go" id="go">Make my Shorts</button>
+    </div>
+
+    <div class="card">
+      <h2>History</h2>
+      <div class="history" id="history"><div class="empty" style="padding:20px">No campaigns yet.</div></div>
+    </div>
+  </section>
+
+  <section id="jobview">
+    <div class="card empty">Paste a campaign on the left and press <b>Make my Shorts</b>.<br>Progress shows up here.</div>
+  </section>
+</main>
+
+<script>
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let current = location.hash.slice(1) || null, last = null, timer = null;
+
+function fmtDur(sec) {
+  if (sec == null || !isFinite(sec)) return "—";
+  sec = Math.max(0, Math.round(sec));
+  if (sec < 60) return sec + " s";
+  const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
+  return h ? `${h} h ${m} min` : (m < 10 ? `${m} min ${s} s` : `${m} min`);
+}
+function since(iso) { return iso ? (Date.now() - new Date(iso).getTime()) / 1000 : null; }
+function when(iso) {
+  if (!iso) return "private (not scheduled)";
+  const d = new Date(iso);
+  if (d <= new Date()) return "public now";
+  const est = d.toLocaleString("en-US", {timeZone: "America/New_York", weekday: "short", hour: "numeric", minute: "2-digit"});
+  const local = d.toLocaleString([], {weekday: "short", hour: "numeric", minute: "2-digit"});
+  return `goes live ${est} EST · ${local} your time`;
+}
+
+document.querySelectorAll(".chip").forEach(b => b.onclick = () => $("#n").value = b.dataset.n);
+
+async function health() {
+  try {
+    const h = await (await fetch("/api/health")).json();
+    const w = [];
+    if (!h.ffmpeg) w.push("ffmpeg is not installed.");
+    if (!h.youtube_login) w.push("YouTube login missing — run <code>shorts.py auth</code> (needed for uploading).");
+    $("#health").innerHTML = w.map(x => `<div class="warn">${x}</div>`).join("");
+  } catch { $("#health").innerHTML = `<div class="warn">Server not reachable.</div>`; }
+}
+
+$("#go").onclick = async () => {
+  const vods = $("#vods").value.trim();
+  const rules = $("#desc").value.trim();
+  const clips = parseInt($("#n").value, 10);
+  const mode = document.querySelector("input[name=mode]:checked").value;
+  if (rules.length < 20) return alert("Paste the campaign description / rules first.");
+  if (!/https?:\/\//.test(rules + vods))
+    return alert("No VOD links yet. Join the campaign, copy the VOD links + timestamps from the campaign page, and paste them in the 'VOD links' box.");
+  const description = rules + (vods ? "\n\nVOD LINKS (eligible timestamps):\n" + vods : "");
+  if (!(clips >= 1 && clips <= 40)) return alert("Clips must be between 1 and 40.");
+  $("#go").disabled = true;
+  try {
+    const r = await fetch("/api/jobs", {method: "POST", headers: {"Content-Type": "application/json"},
+                                        body: JSON.stringify({description, clips, mode})});
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.detail?.[0]?.msg || j.detail || "failed");
+    $("#desc").value = ""; $("#vods").value = "";
+    openJob(j.id);
+    loadHistory();
+  } catch (e) { alert("Couldn't start: " + e.message); }
+  finally { $("#go").disabled = false; }
+};
+
+function openJob(id) { current = id; location.hash = id; last = null; poll.lastTxt = null; morePanel.dataset.init = ""; poll(); loadHistory(); }
+
+async function loadHistory() {
+  try {
+    const list = await (await fetch("/api/jobs")).json();
+    if (!list.length) return;
+    $("#history").innerHTML = list.map(j => `
+      <div class="hist ${j.id === current ? "sel" : ""}" data-id="${esc(j.id)}">
+        <div class="t"><span>${esc(j.title)}</span><span class="pill ${esc(j.status)}">${esc(j.status)}</span></div>
+        <small>${esc(new Date(j.created).toLocaleString())} · ${j.n_clips} clips · ${j.links} uploaded</small>
+      </div>`).join("");
+    document.querySelectorAll(".hist").forEach(el => el.onclick = () => openJob(el.dataset.id));
+  } catch {}
+}
+
+async function resume() {
+  await fetch(`/api/jobs/${current}/resume`, {method: "POST"});
+  last = null; poll.lastTxt = null; poll();
+}
+
+async function repost() {
+  if (!confirm("Re-make all clips of this job and upload them again as PUBLIC now?\n\n" +
+               "Old links stop being listed here. Delete the old videos in YouTube Studio, " +
+               "and submit the new links within 30 minutes.")) return;
+  const r = await fetch(`/api/jobs/${current}/repost`, {method: "POST"});
+  if (!r.ok) { alert((await r.json()).detail || "Re-post failed"); return; }
+  last = null; poll.lastTxt = null; poll();
+}
+
+function render(s) {
+  const active = ["running", "queued"].includes(s.status);
+  const elapsed = s.started ? ((s.finished ? new Date(s.finished) : new Date()) - new Date(s.started)) / 1000 : 0;
+  let pct = s.status === "done" ? 1 : (s.eta_total != null && elapsed > 0 ? elapsed / (elapsed + s.eta_total) : 0);
+  const stagesDone = s.stages.filter(x => ["done", "skipped"].includes(x.status)).length;
+  pct = Math.max(pct, stagesDone / s.stages.length * 0.9);
+  const sum = s.summary ? `<div class="summary">
+      ${s.summary.campaign ? `<div>${esc(s.summary.campaign)}</div>` : ""}
+      <div><b>Creators:</b> ${s.summary.creators.map(c => `<span class="tag">${esc(c)}</span>`).join("") || "—"}
+      &nbsp; <b>Hashtags:</b> ${s.summary.hashtags.map(c => `<span class="tag">${esc(c)}</span>`).join("") || "—"}</div></div>` : "";
+
+  const stages = s.stages.map(st => `
+    <div class="stage ${st.status}">
+      <div class="ico">${st.status === "done" || st.status === "skipped" ? "✓" : st.status === "error" ? "!" : st.status === "waiting" ? "⏸" : ""}</div>
+      <div><div class="lbl">${esc(st.label)}</div>
+        ${st.msg ? `<div class="msg" title="${esc(st.msg)}">${esc(st.msg)}</div>` : ""}
+        ${st.status === "running" ? `<div class="mini"><div style="width:${(st.pct * 100).toFixed(0)}%"></div></div>` : ""}</div>
+      <div class="eta">${st.status === "running" ? (st.pct ? Math.round(st.pct * 100) + "% · " : "") + "~" + fmtDur(st.eta) : ""}</div>
+    </div>`).join("");
+
+  const links = (s.links || []).map(l => `
+    <div class="link"><div><div class="t">${esc(l.title)}</div><a href="${esc(l.url)}" target="_blank">${esc(l.url)}</a>
+      <small>${esc(when(l.publish_at))}</small></div>
+      <button class="btn" onclick="navigator.clipboard.writeText('${esc(l.url)}');this.textContent='Copied'">Copy</button></div>`).join("");
+
+  const log = [...(s.log || [])].reverse().map(l => `<div>${esc(l.t)} <b>${esc(l.msg)}</b></div>`).join("");
+
+  $("#jobview").innerHTML = `
+    <div class="card">
+      <div class="jobhead"><h3>${esc(s.title)}</h3><span class="pill ${esc(s.status)}">${esc(s.status)}</span></div>
+      ${sum}
+      <div class="now">${esc(s.message || "")}</div>
+      <div class="bar"><div style="width:${(pct * 100).toFixed(1)}%"></div></div>
+      <div class="timing">
+        <span>Elapsed <b id="elapsed">${fmtDur(elapsed)}</b></span>
+        <span>${active ? `Time left <b>~${fmtDur(s.eta_total)}</b>` : s.status === "done" ? "<b>Finished</b>" : ""}</span>
+      </div>
+      ${s.error ? `<div class="errbox">${esc(s.error)}</div>` : ""}
+      ${s.status === "waiting" ? `<div class="note">${esc(s.message)}</div>` : ""}
+      ${["error", "waiting"].includes(s.status) ? `<button class="btn primary" style="margin-top:12px" onclick="resume()">Resume</button>` : ""}
+      ${!active && (s.links || []).length ? `<button class="btn" style="margin-top:12px;margin-left:8px" onclick="repost()" title="Re-make all clips and upload them again as public now. Delete the old ones in YouTube Studio.">Re-post all (public now)</button>` : ""}
+      <div id="moreSlot"></div>
+      <div class="stages">${stages}</div>
+    </div>
+    <div class="grid2">
+      <div class="card"><h2>YouTube links ${(s.links || []).length ? `<button class="btn" style="float:right" onclick="copyAll()">Copy all</button>` : ""}</h2>
+        <div class="links">${links || `<div style="color:var(--muted)">Links appear here as each Short uploads. Submit them on the campaign page.</div>`}</div></div>
+      <div class="card"><h2>What's happening</h2><div class="log">${log || "—"}</div></div>
+    </div>`;
+}
+
+// "Make more clips" panel: one persistent element (so typing isn't wiped by the 1 s refresh)
+const morePanel = document.createElement("div");
+morePanel.className = "more";
+morePanel.innerHTML = `
+  <h4>Make more clips from this campaign</h4>
+  <p>Uses new footage that earlier batches didn't use, so no duplicate clips.</p>
+  <div class="row">
+    <input id="moreN" type="number" min="1" max="40" value="5">
+    <select id="moreMode">
+      <option value="public">Upload right away</option>
+      <option value="schedule">Upload &amp; schedule (US prime time)</option>
+      <option value="private">Upload as private</option>
+      <option value="none">Don't upload</option>
+    </select>
+    <button class="btn primary" id="moreGo">Make more clips</button>
+  </div>`;
+morePanel.querySelector("#moreGo").onclick = async () => {
+  const clips = parseInt(morePanel.querySelector("#moreN").value, 10);
+  const mode = morePanel.querySelector("#moreMode").value;
+  if (!(clips >= 1 && clips <= 40)) return alert("Clips must be between 1 and 40.");
+  const btn = morePanel.querySelector("#moreGo");
+  btn.disabled = true;
+  try {
+    const r = await fetch(`/api/jobs/${current}/more`, {method: "POST", headers: {"Content-Type": "application/json"},
+                                                         body: JSON.stringify({clips, mode})});
+    const j = await r.json();
+    if (!r.ok) throw new Error(typeof j.detail === "string" ? j.detail : "failed");
+    openJob(j.id);
+  } catch (e) { alert("Couldn't start: " + e.message); }
+  finally { btn.disabled = false; }
+};
+function placeMore(s) {
+  const slot = $("#moreSlot");
+  const parsed = s.stages.find(x => x.key === "parse")?.status === "done";
+  if (slot && parsed && !["running", "queued"].includes(s.status)) {
+    if (s.mode && !morePanel.dataset.init) { morePanel.querySelector("#moreMode").value = s.mode; }
+    morePanel.dataset.init = "1";
+    slot.appendChild(morePanel);
+  }
+}
+
+window.copyAll = () => navigator.clipboard.writeText((last?.links || []).map(l => l.url).join("\n"));
+
+async function poll() {
+  clearTimeout(timer);
+  if (!current) return;
+  try {
+    const r = await fetch(`/api/jobs/${current}`);
+    if (r.ok) {
+      const txt = await r.text();
+      const s = JSON.parse(txt);
+      const prevStatus = last?.status;
+      const changed = txt !== poll.lastTxt || ["running", "queued"].includes(s.status);
+      poll.lastTxt = txt;
+      last = s;
+      if (changed) { render(s); placeMore(s); }
+      if (prevStatus && prevStatus !== s.status) loadHistory();
+      timer = setTimeout(poll, ["running", "queued"].includes(s.status) ? 1000 : 5000);
+      return;
+    }
+  } catch {}
+  timer = setTimeout(poll, 3000);
+}
+
+health(); loadHistory(); if (current) poll();
+</script>
+</body>
+</html>

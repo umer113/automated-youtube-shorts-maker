@@ -1,0 +1,10 @@
+yt-dlp
+faster-whisper
+numpy
+tzdata
+google-api-python-client
+google-auth-oauthlib
+google-auth-httplib2
+fastapi
+uvicorn[standard]
+pillow
